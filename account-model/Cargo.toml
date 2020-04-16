@@ -8,3 +8,5 @@ edition = "2018"
 uuid = { version = "0.8", features = ["serde", "v4"] }
 isocountry = {version = "0.2.0" }
 iso_currency = {version = "0.2.0" }
+#derive_builder = {version = "0.9.0"}
+log = "0.4"

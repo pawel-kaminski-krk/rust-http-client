@@ -20,8 +20,8 @@ pub struct PrivateIdentification<'a> {
 
 #[derive(Debug, PartialEq)]
 pub struct Account<'a> {
-    id: &'a Uuid,
-    organisation_id: &'a Uuid,
+    id: Uuid,
+    organisation_id: Uuid,
     country: CountryCode,
     currency: Currency,
     bank_id_code: &'a str,
@@ -30,6 +30,7 @@ pub struct Account<'a> {
     number: &'a str,
     iban: &'a str,
     title: &'a str,
+    classification: Classification,
 }
 
 impl Eq for Account<'_> {}
