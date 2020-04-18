@@ -198,11 +198,7 @@ impl Builder {
 }
 
 fn get_or_create_id(given: Option<Uuid>) -> Uuid {
-    if given.is_none() {
-        Uuid::new_v4()
-    } else {
-        given.unwrap()
-    }
+    given.unwrap_or_else(|| Uuid::new_v4())
 }
 
 #[cfg(test)]
@@ -211,8 +207,8 @@ mod tests {
     use isocountry::CountryCode::GBR;
     use uuid::Uuid;
 
-    use crate::account::KnownBankIdCode;
     use crate::account::Classification::{BUSINESS, PERSONAL};
+    use crate::account::KnownBankIdCode;
 
     use super::Builder;
 
