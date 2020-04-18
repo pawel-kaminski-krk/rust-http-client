@@ -8,83 +8,95 @@ use crate::account::{Classification, KnownBankIdCode};
 use crate::account::Classification::{BUSINESS, PERSONAL};
 
 #[derive(Debug)]
-pub struct Builder<'a> {
-    account: Account<'a>,
+pub struct Builder {
+    id: Option<Uuid>,
+    organisation_id: Option<Uuid>,
+    country: Option<CountryCode>,
+    currency: Option<Currency>,
+    bank_id_code: Option<String>,
+    bank_id: Option<String>,
+    bic: Option<String>,
+    number: Option<String>,
+    iban: Option<String>,
+    title: Option<String>,
+    classification: Classification,
 }
 
-impl<'a> Builder<'a> {
-    pub fn new_account() -> Builder<'a> {
+impl Builder {
+    pub fn new_account() -> Builder {
         Builder {
-            account: Account {
-                id: Uuid::new_v4(),
-                organisation_id: Uuid::new_v4(),
-                country: CountryCode::AFG,
-                currency: Currency::AED,
-                bank_id_code: "",
-                bank_id: "",
-                bic: "",
-                number: "",
-                iban: "",
-                title: "",
-                classification: Classification::PERSONAL,
-            }
+            id: None,
+            organisation_id: None,
+            country: None,
+            currency: None,
+            bank_id_code: None,
+            bank_id: None,
+            bic: None,
+            number: None,
+            iban: None,
+            title: None,
+            classification: Classification::PERSONAL,
         }
     }
 
-    pub fn with_account_id(&mut self, id: Uuid) -> &mut Builder<'a> {
-        self.account.id = id;
+    pub fn with_account_id(&mut self, id: Uuid) -> &mut Builder {
+        self.id = Some(id);
         self
     }
 
-    pub fn with_organisation_id(&mut self, id: Uuid) -> &mut Builder<'a> {
-        self.account.id = id;
+    pub fn with_organisation_id(&mut self, id: Uuid) -> &mut Builder {
+        self.organisation_id = Some(id);
         self
     }
 
-    pub fn with_country(&mut self, country: CountryCode) -> &mut Builder<'a> {
-        self.account.country = country;
+    pub fn with_country(&mut self, country: CountryCode) -> &mut Builder {
+        self.country = Some(country);
         self
     }
 
-    pub fn with_bank_id(&mut self, id: &'a str) -> &mut Builder<'a> {
-        self.account.bank_id = id;
+    pub fn with_bank_id(&mut self, id: &str) -> &mut Builder {
+        self.bank_id = Some(id.to_string());
         self
     }
 
-    pub fn with_bank_id_code(&mut self, code: &'a str) -> &mut Builder<'a> {
-        self.account.bank_id_code = code;
+    pub fn with_bank_id_code(&mut self, code: &str) -> &mut Builder {
+        self.bank_id_code = Some(code.to_string());
         self
     }
 
-    pub fn with_number(&mut self, number: &'a str) -> &mut Builder<'a> {
-        self.account.number = number;
+    pub fn with_number(&mut self, number: &str) -> &mut Builder {
+        self.number = Some(number.to_string());
         self
     }
 
-    pub fn with_iban(&mut self, iban: &'a str) -> &mut Builder<'a> {
-        self.account.iban = iban;
+    pub fn with_iban(&mut self, iban: &str) -> &mut Builder {
+        self.iban = Some(iban.to_string());
         self
     }
 
-    pub fn with_bic(&mut self, bic: &'a str) -> &mut Builder<'a> {
-        self.account.bic = bic;
+    pub fn with_bic(&mut self, bic: &str) -> &mut Builder {
+        self.bic = Some(bic.to_string());
         self
     }
 
-    pub fn mark_personal(&mut self) -> &mut Builder<'a> {
-        self.account.classification = PERSONAL;
+    pub fn mark_personal(&mut self) -> &mut Builder {
+        self.classification = PERSONAL;
         self
     }
 
-    pub fn mark_business(&mut self) -> &mut Builder<'a> {
-        self.account.classification = BUSINESS;
+    pub fn mark_business(&mut self) -> &mut Builder {
+        self.classification = BUSINESS;
         self
     }
 
     pub fn build(&mut self) -> Result<Account, String> {
-        if self.account.country == CountryCode::GBR {
-            self.account.currency = Currency::GBP;
-            return validate_gb_country_account_restrictions(&mut self.account);
+        if self.country.is_none() {
+            return Err("Country is required".to_string());
+        }
+
+        if self.country.unwrap() == CountryCode::GBR {
+            self.create_account_with_gb_country_restrictions()
+
             // } else if self.account.country == CountryCode::AUS {
             //     self.account.currency = Currency::AUD;
             //     return validateAuAccountRestrictions(&self.account);
@@ -131,54 +143,127 @@ impl<'a> Builder<'a> {
             //     self.account.currency = Currency::USD;
             //     return validateUsAccountRestriction(&self.account);
         } else {
-            return Err(format!("Unsupported country {}", self.account.country))
+            Err(format!("Unsupported country {}", self.country.unwrap()))
         }
     }
-}
 
-fn validate_gb_country_account_restrictions<'a>(account: &'a mut Account<'a>) -> Result<&'a mut Account<'a>, String> {
-    if account.bic.is_empty() {
-        return Err(format!("{} requires Bic", CountryCode::GBR))
+    fn create_account_with_gb_country_restrictions(&mut self) -> Result<Account, String> {
+        if self.bic.is_none() {
+            return Err(format!("{} requires Bic", CountryCode::GBR.alpha3()));
+        }
+        self.validate_account_restriction_by(CountryCode::GBR,
+                                             8,
+                                             6,
+                                             KnownBankIdCode::GbBankIdCode)?;
+        Ok(Account {
+            id: get_or_create_id(self.id),
+            organisation_id: get_or_create_id(self.organisation_id),
+            country: CountryCode::GBR,
+            currency: Currency::GBP,
+            bank_id: self.bank_id.as_ref().expect("bank id is required").to_string(),
+            bank_id_code: self.bank_id_code.as_ref().expect("bank id code is required").to_string(),
+            bic: self.bic.as_ref().unwrap().to_string(),
+            number: self.number.clone(),
+            iban: self.iban.clone(),
+            title: self.title.clone(),
+            classification: self.classification,
+        })
     }
-    return validate_account_restriction_by(account,
-                                           CountryCode::GBR,
-                                           8,
-                                           6,
-                                           KnownBankIdCode::GbBankIdCode);
-}
 
-fn validate_account_restriction_by<'a>(account: &'a mut Account<'a>,
+    fn validate_account_restriction_by(&mut self,
                                        country: CountryCode,
                                        expected_number_length: u8,
                                        expected_bank_id_length: u8,
-                                       expected_code: KnownBankIdCode) -> Result<&'a mut Account<'a>, String> {
-    let number_value_length = account.number.len();
-    if number_value_length > 0 {
-        if number_value_length != expected_number_length as usize {
-            return Err(format!("{} requires {}-character long Account Number",
-                               country, expected_number_length));
+                                       expected_code: KnownBankIdCode) -> Result<(), String> {
+        if self.number.is_some() {
+            if self.number.as_ref().unwrap().len() != expected_number_length as usize {
+                return Err(format!("{} requires {}-character long Account Number",
+                                   country.alpha3(), expected_number_length));
+            }
         }
+        if self.bank_id.is_none() || self.bank_id.as_ref().unwrap().len() != expected_bank_id_length as usize {
+            return Err(format!("{} requires {}-character BankId, got '{:?}'",
+                               country.alpha3(), expected_bank_id_length, self.bank_id));
+        }
+
+        let bank_id_code: &str = expected_code.into();
+        let bank_id_code_s: &String = &bank_id_code.to_string();
+        if self.bank_id_code.is_none() || self.bank_id_code.as_ref().unwrap().ne(bank_id_code_s) {
+            debug!(target: "account_builder", "{} requires BankIdCode, got invalid '{:?}'",
+                   country.alpha3(), self.bank_id_code);
+            self.bank_id_code = Some(bank_id_code_s.to_string());
+        }
+        return Ok(());
     }
-    if account.bank_id.len() != expected_bank_id_length as usize {
-        return Err(format!("{} requires {}-character BankId, got '{}'",
-                           country, expected_bank_id_length, account.bank_id));
+}
+
+fn get_or_create_id(given: Option<Uuid>) -> Uuid {
+    if given.is_none() {
+        Uuid::new_v4()
+    } else {
+        given.unwrap()
     }
-    if account.bank_id_code != expected_code.value() {
-        debug!(target: "account_builder", "{} requires BankIdCode, got invalid '{}'",
-               country, account.bank_id_code);
-        account.bank_id_code = expected_code.value()
-    }
-    return Ok(account);
 }
 
 #[cfg(test)]
 mod tests {
     use iso_currency::Currency::GBP;
     use isocountry::CountryCode::GBR;
+    use uuid::Uuid;
 
-    use crate::account::Classification::BUSINESS;
+    use crate::account::KnownBankIdCode;
+    use crate::account::Classification::{BUSINESS, PERSONAL};
 
     use super::Builder;
+
+    #[test]
+    fn should_fail_as_no_country() {
+        let actual = Builder::new_account()
+            .build()
+            .unwrap_err();
+
+        // then
+        assert_eq!("Country is required", actual);
+    }
+
+    macro_rules! invalid_account_parametrised {
+        ($($name:ident: $value:expr,)*) => {
+            $(
+                #[test]
+                fn $name() {
+                    let (country, bic, number, bank_id, expected) = $value;
+                    let mut builder: Builder = Builder::new_account();
+                    let builder: &mut Builder = &mut builder;
+
+                    builder
+                        .with_country(country)
+                        .mark_business();
+
+                    if bank_id.is_some() {
+                        builder.with_bank_id(bank_id.unwrap());
+                    }
+                    if bic.is_some() {
+                        builder.with_bic(bic.unwrap());
+                    }
+                    if number.is_some() {
+                        builder.with_number(number.unwrap());
+                    }
+
+                    let actual = builder.build().unwrap_err();
+                    assert_eq!(expected, actual);
+                }
+            )*
+        }
+    }
+
+    invalid_account_parametrised! {
+        GBR_invalid_bic: (GBR, None, None, None, "GBR requires Bic"),
+        GBR_no_bank_id: (GBR, Some("NWBKGB22"), None, None, "GBR requires 6-character BankId, got 'None'"),
+        GBR_too_short_bank_id: (GBR, Some("NWBKGB22"), None, Some("lt-6c"), "GBR requires 6-character BankId, got 'Some(\"lt-6c\")'"),
+        GBR_too_long_bank_id: (GBR, Some("NWBKGB22"), None, Some("gt6char"), "GBR requires 6-character BankId, got 'Some(\"gt6char\")'"),
+        GBR_too_short_number: (GBR, Some("NWBKGB22"), Some("lt-8chr"), Some("400300"), "GBR requires 8-character long Account Number"),
+        GBR_too_long_number: (GBR, Some("NWBKGB22"), Some("gt-8chars"), Some("400300"), "GBR requires 8-character long Account Number"),
+    }
 
     #[test]
     fn should_build_account_in_gbr() {
@@ -190,10 +275,47 @@ mod tests {
             .build().unwrap();
 
         // then
+        assert!(!account.id.is_nil());
+        assert!(!account.organisation_id.is_nil());
         assert_eq!("NWBKGB22", account.bic);
         assert_eq!("400300", account.bank_id);
+        assert_eq!(as_string(KnownBankIdCode::GbBankIdCode), account.bank_id_code);
         assert_eq!(GBR, account.country);
         assert_eq!(GBP, account.currency);
         assert_eq!(BUSINESS, account.classification);
+    }
+
+    #[test]
+    fn should_build_full_account_in_gbr() {
+        let id = Uuid::new_v4();
+        let org_id = Uuid::new_v4();
+        let account = Builder::new_account()
+            .with_account_id(id)
+            .with_organisation_id(org_id)
+            .with_country(GBR)
+            .with_bank_id("400300")
+            .with_bic("NWBKGB22")
+            .mark_personal()
+            .with_number("12345678")
+            .with_bank_id_code("invalid")
+            .with_iban("iban-code")
+            .build().unwrap();
+
+        // then
+        assert_eq!(id, account.id);
+        assert_eq!(org_id, account.organisation_id);
+        assert_eq!("NWBKGB22", account.bic);
+        assert_eq!("400300", account.bank_id);
+        assert_eq!(as_string(KnownBankIdCode::GbBankIdCode), account.bank_id_code);
+        assert_eq!(GBR, account.country);
+        assert_eq!(GBP, account.currency);
+        assert_eq!(PERSONAL, account.classification);
+        assert_eq!("12345678", account.number.unwrap().to_string());
+        assert_eq!("iban-code", account.iban.unwrap().to_string());
+    }
+
+    fn as_string(code: KnownBankIdCode) -> String {
+        let value: &str = code.into();
+        value.to_string()
     }
 }

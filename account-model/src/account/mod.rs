@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 pub mod account_builder;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum Classification {
     PERSONAL,
     BUSINESS,
@@ -42,7 +42,7 @@ impl TryFrom<&str> for Classification {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum KnownBankIdCode {
     GbBankIdCode,
     AuBankIdCode,
@@ -112,8 +112,6 @@ impl FromStr for KnownBankIdCode {
 mod tests {
     use std::convert::TryInto;
 
-    use crate::account::Classification::PERSONAL;
-
     use super::Classification;
     use super::KnownBankIdCode;
 
@@ -144,21 +142,21 @@ mod tests {
     }
 
     parametrised! {
-        GB_bank_id_code_to_value: (KnownBankIdCode::GbBankIdCode, "GBDSC", |c: KnownBankIdCode| c.into()),
-        AU_bank_id_code_to_value: (KnownBankIdCode::AuBankIdCode, "AUBSB", |c: KnownBankIdCode| c.into()),
-        BE_bank_id_code_to_value: (KnownBankIdCode::BeBankIdCode, "BE",    |c: KnownBankIdCode| c.into()),
-        CA_bank_id_code_to_value: (KnownBankIdCode::CaBankIdCode, "CACPA", |c: KnownBankIdCode| c.into()),
-        FR_bank_id_code_to_value: (KnownBankIdCode::FrBankIdCode, "FR",    |c: KnownBankIdCode| c.into()),
-        DE_bank_id_code_to_value: (KnownBankIdCode::DeBankIdCode, "DEBLZ", |c: KnownBankIdCode| c.into()),
-        GR_bank_id_code_to_value: (KnownBankIdCode::GrBankIdCode, "GRBIC", |c: KnownBankIdCode| c.into()),
-        HK_bank_id_code_to_value: (KnownBankIdCode::HkBankIdCode, "HKNCC", |c: KnownBankIdCode| c.into()),
-        IT_bank_id_code_to_value: (KnownBankIdCode::ItBankIdCode, "ITNCC", |c: KnownBankIdCode| c.into()),
-        LU_bank_id_code_to_value: (KnownBankIdCode::LuBankIdCode, "LULUX", |c: KnownBankIdCode| c.into()),
-        PL_bank_id_code_to_value: (KnownBankIdCode::PlBankIdCode, "PLKNR", |c: KnownBankIdCode| c.into()),
-        PT_bank_id_code_to_value: (KnownBankIdCode::PtBankIdCode, "PTNCC", |c: KnownBankIdCode| c.into()),
-        ES_bank_id_code_to_value: (KnownBankIdCode::EsBankIdCode, "ESNCC", |c: KnownBankIdCode| c.into()),
-        CH_bank_id_code_to_value: (KnownBankIdCode::ChBankIdCode, "CHBCC", |c: KnownBankIdCode| c.into()),
-        US_bank_id_code_to_value: (KnownBankIdCode::UsBankIdCode, "USABA", |c: KnownBankIdCode| c.into()),
+        GB_bank_id_code_to_value: (KnownBankIdCode::GbBankIdCode, "GBDSC", |c: KnownBankIdCode| -> &str { c.into() }),
+        AU_bank_id_code_to_value: (KnownBankIdCode::AuBankIdCode, "AUBSB", |c: KnownBankIdCode| -> &str { c.into() }),
+        BE_bank_id_code_to_value: (KnownBankIdCode::BeBankIdCode, "BE",    |c: KnownBankIdCode| -> &str { c.into() }),
+        CA_bank_id_code_to_value: (KnownBankIdCode::CaBankIdCode, "CACPA", |c: KnownBankIdCode| -> &str { c.into() }),
+        FR_bank_id_code_to_value: (KnownBankIdCode::FrBankIdCode, "FR",    |c: KnownBankIdCode| -> &str { c.into() }),
+        DE_bank_id_code_to_value: (KnownBankIdCode::DeBankIdCode, "DEBLZ", |c: KnownBankIdCode| -> &str { c.into() }),
+        GR_bank_id_code_to_value: (KnownBankIdCode::GrBankIdCode, "GRBIC", |c: KnownBankIdCode| -> &str { c.into() }),
+        HK_bank_id_code_to_value: (KnownBankIdCode::HkBankIdCode, "HKNCC", |c: KnownBankIdCode| -> &str { c.into() }),
+        IT_bank_id_code_to_value: (KnownBankIdCode::ItBankIdCode, "ITNCC", |c: KnownBankIdCode| -> &str { c.into() }),
+        LU_bank_id_code_to_value: (KnownBankIdCode::LuBankIdCode, "LULUX", |c: KnownBankIdCode| -> &str { c.into() }),
+        PL_bank_id_code_to_value: (KnownBankIdCode::PlBankIdCode, "PLKNR", |c: KnownBankIdCode| -> &str { c.into() }),
+        PT_bank_id_code_to_value: (KnownBankIdCode::PtBankIdCode, "PTNCC", |c: KnownBankIdCode| -> &str { c.into() }),
+        ES_bank_id_code_to_value: (KnownBankIdCode::EsBankIdCode, "ESNCC", |c: KnownBankIdCode| -> &str { c.into() }),
+        CH_bank_id_code_to_value: (KnownBankIdCode::ChBankIdCode, "CHBCC", |c: KnownBankIdCode| -> &str { c.into() }),
+        US_bank_id_code_to_value: (KnownBankIdCode::UsBankIdCode, "USABA", |c: KnownBankIdCode| -> &str { c.into() }),
     }
 
     parametrised! {

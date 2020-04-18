@@ -19,25 +19,25 @@ pub struct PrivateIdentification<'a> {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Account<'a> {
+pub struct Account {
     id: Uuid,
     organisation_id: Uuid,
     country: CountryCode,
     currency: Currency,
-    bank_id_code: &'a str,
-    bank_id: &'a str,
-    bic: &'a str,
-    number: &'a str,
-    iban: &'a str,
-    title: &'a str,
+    bank_id_code: String,
+    bank_id: String,
+    bic: String,
+    number: Option<String>,
+    iban: Option<String>,
+    title: Option<String>,
     classification: Classification,
 }
 
-impl Eq for Account<'_> {}
+impl Eq for Account {}
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct CopAccount<'a> {
-    account: &'a Account<'a>,
+    account: Account,
     first_name: &'a str,
     bank_account_names: &'a Vec<String>,
     bank_account_classification: Classification,
@@ -48,6 +48,6 @@ pub struct CopAccount<'a> {
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct SepaAccount<'a> {
-    account: &'a Account<'a>,
+    account: Account,
     identification: &'a PrivateIdentification<'a>,
 }
