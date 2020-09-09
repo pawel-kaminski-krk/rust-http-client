@@ -23,7 +23,7 @@ pub struct Builder {
 }
 
 impl Builder {
-    pub fn new_account() -> Builder {
+    pub(crate) fn new_account() -> Builder {
         Builder {
             id: None,
             organisation_id: None,

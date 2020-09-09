@@ -5,3 +5,7 @@ authors = ["pawel.kaminski <44blocks.dev@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+uuid = { version = "0.8", features = ["serde", "v4"] }
+isocountry = {version = "0.2.0" }
+iso_currency = {version = "0.2.0" }
+account-model = { path = "../account-model" }

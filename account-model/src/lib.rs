@@ -2,6 +2,7 @@ use iso_currency::Currency;
 use isocountry::CountryCode;
 use uuid::Uuid;
 
+use crate::account::account_builder::Builder;
 use crate::account::Classification;
 
 mod account;
@@ -31,6 +32,51 @@ pub struct Account {
     iban: Option<String>,
     title: Option<String>,
     classification: Classification,
+}
+
+impl Account {
+    pub fn cop() -> Builder {
+        return Builder::new_account();
+    }
+
+    pub fn sepa() -> Builder {
+        return Builder::new_account();
+    }
+
+
+    pub fn id(&self) -> Uuid {
+        self.id
+    }
+    pub fn organisation_id(&self) -> Uuid {
+        self.organisation_id
+    }
+    pub fn country(&self) -> CountryCode {
+        self.country
+    }
+    pub fn currency(&self) -> Currency {
+        self.currency
+    }
+    pub fn bank_id_code(&self) -> &str {
+        &self.bank_id_code
+    }
+    pub fn bank_id(&self) -> &str {
+        &self.bank_id
+    }
+    pub fn bic(&self) -> &str {
+        &self.bic
+    }
+    pub fn number(&self) -> &Option<String> {
+        &self.number
+    }
+    pub fn iban(&self) -> &Option<String> {
+        &self.iban
+    }
+    pub fn title(&self) -> &Option<String> {
+        &self.title
+    }
+    pub fn classification(&self) -> Classification {
+        self.classification
+    }
 }
 
 impl Eq for Account {}
